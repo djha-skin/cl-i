@@ -1,8 +1,20 @@
+;;;; main.lisp -- Main body of functions for CL-I.
+;;;;
+;;;; SPDX-FileCopyrightText: 2024 Daniel Jay Haskin
+;;;; SPDX-License-Identifier: MIT
+
+;;; Some golly fluff.
 #+(or)
-(declaim (optimize (speed 0) (space 0) (debug 3)))
+(progn
+
+
+  (declaim (optimize (speed 0) (space 0) (debug 3)))
+  (asdf:load-system "com.djhaskin.cl-i"))
+;;; Package definition.
 (in-package #:cl-user)
 (defpackage
-  #:cl-i (:use #:cl)
+  #:com.djhaskin.cl-i
+  (:use #:cl)
   (:documentation
     "
     package that has a function, `execute-program`, which does the following:
@@ -14,12 +26,14 @@
     according to spefic rules and from these rules constructs a hash table
     which is then passed to the subcommands.
     ")
-    (:import-from #:nrdl)
+  (:import-from #:com.djhaskin.nrdl)
     (:import-from #:dexador)
     (:import-from #:uiop/pathname)
     (:import-from #:quri)
     (:import-from #:uiop/stream)
-    (:import-from #:cl-i/errors)
+    (:import-from #:com.djhaskin.cl-i/errors)
+  (:local-nicknames (#:nrdl #:com.djhaskin.nrdl)
+                    (#:cl-i/errors #:com.djhaskin.cl-i/errors))
     (:export
       generate-string
       parse-string
@@ -40,7 +54,7 @@
       system-environment-variables
       default-help
       execute-program))
-(in-package #:cl-i)
+(in-package #:com.djhaskin.cl-i)
 
 (defun repeatedly-eq
   (func
@@ -328,7 +342,7 @@
   #-windows "/")
 
 (define-condition necessary-env-var-absent (error)
-   
+
   ((env-var :initarg :env-var
             :initform (error "Need to give argument `:env-var`.")
             :reader env-var))
@@ -508,7 +522,7 @@
            (when (not (gethash kopt opts))
              (setf (gethash kopt opts)
                    (apply #'make-hash-table hash-init-args)))
-           (setf (gethash (nrdl:string-keyword k) (gethash kopt opts)) v))
+           (setf (gethash (nrdl:string-symbol k) (gethash kopt opts)) v))
          (error "not a k/v pair, check map sep pattern: ~a" value))))
     ((eql kact :nrdl)
      (setf (gethash kopt opts)
@@ -565,9 +579,9 @@
              (rargs (rest consumable)))
             (or
               (cl-ppcre:register-groups-bind
-                ((#'nrdl:string-keyword
+                ((#'nrdl:string-symbol
                   kact)
-                 (#'nrdl:string-keyword
+                 (#'nrdl:string-symbol
                   kopt))
                 (+find-tag+
                   arg)
@@ -772,8 +786,8 @@
               value)
       do
       (cl-ppcre:register-groups-bind
-        ((#'nrdl:string-keyword ktag)
-         (#'nrdl:string-keyword kopt))
+        ((#'nrdl:string-symbol ktag)
+         (#'nrdl:string-symbol kopt))
         (var-pattern key)
         (ingest-var
           result
@@ -993,23 +1007,22 @@ This is nonsense.
     "        (by default `%USERPROFILE%\\AppData\\Local\\~A\\config.nrdl)`~%"
     program-name)
   ; Environment variables section
-  (format
-    strm "~@{~@?~}"
-          "Options can be set via environment variable as follows:~%"
-          "~%"
-          "  - `~A_FLAG_<OPTION>=1` to enable a boolean flag" program-name
-                program-name
-          "  - `~A_ITEM_<OPTION>=<VALUE>` to set a string value" program-name
-                program-name
-          "  - `~A_LIST_<OPTION>=<VAL1>~A<VAL2>~A...` to set a list option~%"
-                program-name list-sep list-sep
-          "  - `~A_TABLE_<OPTION>=<KEY1>~A<VAL1>~A<KEY2>~A<VAL2>~A...` to set~%"
-          "     a key/value table option~%"
-                program-name list-sep map-sep list-sep map-sep
-          "  - `~A_NRDL_<OPTION>=<NRDL_STRING>` to set a value using~%"
-                program-name
-          "     a NRDL string~%"
-          "~%")
+  (let ((up-program-name (string-upcase program-name)))
+    (format
+      strm "~@{~@?~}"
+      "Options can be set via environment variable as follows:~%"
+      "~%"
+      "  - `~A_FLAG_<OPTION>=1` to enable a boolean flag~%" up-program-name
+      "  - `~A_ITEM_<OPTION>=<VALUE>` to set a string value~%" up-program-name
+      "  - `~A_LIST_<OPTION>=<VAL1>~A<VAL2>~A...` to set a list option~%"
+      up-program-name list-sep list-sep
+      "  - `~A_TABLE_<OPTION>=<KEY1>~A<VAL1>~A<KEY2>~A<VAL2>~A...` to set~%"
+      up-program-name list-sep map-sep list-sep map-sep
+      "     a key/value table option~%"
+      "  - `~A_NRDL_<OPTION>=<NRDL_STRING>` to set a value using~%"
+      up-program-name
+      "     a NRDL string~%"
+      "~%"))
   (format
     strm
     "~@{~@?~}"
@@ -1039,9 +1052,7 @@ This is nonsense.
                 other-args
                 helpstring)
         (format strm "~%Documentation for subcommand `~{~A~^ ~}` not found.~%"
-                other-args))
-        (format strm "~%The subcommand `~{~A~^ ~}` does not exist.~%"
-                other-args))
+                other-args)))
   (alexandria:alist-hash-table
     '(
       (:status . :successful)
@@ -1198,7 +1209,7 @@ This is nonsense.
                      (code (gethash :status final-result
                                     (gethash :successful cl-i/errors:*exit-codes*
                                              0))))
-                         (values 
+                         (values
                            (gethash code cl-i/errors:*exit-codes*
                                     (gethash :unknown-error cl-i/errors:*exit-codes*
                                              128))
@@ -1215,3 +1226,4 @@ This is nonsense.
                     `((:status .  ,exit-status)
                       (:error-message . ,(format nil "~A" e)))
                     (cl-i/errors:exit-map-members e)))))))))))
+

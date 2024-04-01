@@ -1,18 +1,44 @@
+;;;; tests/main.lisp -- Tests for the cl-i package.
+;;;;
+;;;; SPDX-FileCopyrightText: 2024 Daniel Jay Haskin
+;;;; SPDX-License-Identifier: MIT
+
+
+;;; REPL help.
 #+(or)
-(declaim (optimize (speed 0) (space 0) (debug 3)))
+(progn
+  (asdf:load-system :com.djhaskin.cl-i)
+  (declaim (optimize (speed 0) (space 0) (debug 3)))
+(asdf:load-system "com.djhaskin.nrdl")
+(asdf:load-system "com.djhaskin.cl-i")
+
+(asdf:load-system "parachute")
+
+;;; Package definition.
 (in-package #:cl-user)
+(defpackage #:com.djhaskin.cl-i/tests
+  (:use #:cl)
+  (:import-from
+    #:com.djhaskin.cl-i)
+  (:import-from
+    #:org.shirakumo.parachute
+    #:define-test
+    #:true
+    #:false
+    #:fail
+    #:is
+    #:isnt
+    #:is-values
+    #:isnt-values
+    #:of-type
+    #:finish
+    #:test)
+  (:import-from
+    #:com.djhaskin.nrdl)
+  (:local-nicknames (#:cl-i #:com.djhaskin.cl-i)
+                    (#:nrdl #:com.djhaskin.nrdl)))
 
-(defpackage #:cl-i/tests
-  (:use #:cl
-        #:rove)
-  (:import-from
-    #:cl-i)
-  (:import-from
-    #:nrdl)
-  (:import-from
-    #:cl-ppcre))
-
-(in-package :cl-i/tests)
+(in-package #:com.djhaskin.cl-i/tests)
 
 (defparameter *test-config-file*
   (merge-pathnames
@@ -49,49 +75,57 @@
 
 (defun broken-dec (n) (declare (number n)) (if (>= n 0) (- n 1) 0))
 
-(deftest
-  repeatedly-eq
-  (testing "repeatedly-eq"
-  (signals (cl-i::repeatedly-eq #'broken-dec 3))
-  (ok (equal (cl-i::repeatedly-eq #'positive-dec 3) '(3 2 1 0)))))
+(defmacro signals (&body body)
+  `(handler-case
+       (progn
+         ,@body
+         (fail "Should have thrown an error"))
+     (t (sig) (true sig))))
 
-(deftest
-  repeatedly
-  (testing "repeatedly"
+(define-test helper-function-tests)
+
+(define-test repeatedly-eq
+  :parent helper-function-tests
+  (signals (cl-i::repeatedly-eq #'broken-dec 3))
+  (is equal (cl-i::repeatedly-eq #'positive-dec 3) '(3 2 1 0)))
+
+(define-test repeatedly
+  :parent helper-function-tests
   (signals
     (cl-i::repeatedly
                           #'positive-dec
                           3
                           (lambda (thing) (< thing 0))))
-  (ok (equal (cl-i::repeatedly
+  (is equal (cl-i::repeatedly
                #'positive-dec
                3
                (lambda (item)
                  (<= item 0)))
-             '(3 2 1)))))
+             '(3 2 1)))
 
+(test *)
 
-(deftest
-  basic-find-file
-  (testing "basic-find-file"
-           (ok
-             (equal
-               (slot-value
-                 (asdf:find-system "cl-i")
-                 'asdf/component:absolute-pathname)
-               (cl-i:find-file
-                 *tests-dir*
-                 "cl-i")))
-           (ok
-             (equal
-               (cl-i:find-file
-                 (merge-pathnames
-                   #P"/leaves-of-grass"
-                   (slot-value
-                     (asdf:find-system "cl-i")
-                     'asdf/component:absolute-pathname))
-                 "600dc0d36077a10ada600dd3a10fda7a")
-               nil))))
+(define-test config-supporting-functions)
+
+(define-test basic-find-file
+  :parent config-supporting-functions
+  ;;; TODO: Finish him!
+  (is equal
+      (slot-value
+        (asdf:find-system "cl-i")
+        'asdf/component:absolute-pathname)
+      (cl-i:find-file
+        *tests-dir*
+        "cl-i"))
+  (is eq
+      nil
+      (cl-i:find-file
+        (merge-pathnames
+          (slot-value
+            (asdf:load-system "cl-i" :force t)
+            'asdf/component:absolute-pathname)
+          #P"/leaves-of-grass")
+        "600dc0d36077a10ada600dd3a10fda7a")))
 
 (deftest
   slurp-stream
