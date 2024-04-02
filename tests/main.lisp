@@ -8,11 +8,11 @@
 #+(or)
 (progn
   (asdf:load-system :com.djhaskin.cl-i)
-  (declaim (optimize (speed 0) (space 0) (debug 3)))
-(asdf:load-system "com.djhaskin.nrdl")
-(asdf:load-system "com.djhaskin.cl-i")
+  (declaim (optimize (speed 0) (space 0) (debug 3))))
 
 (asdf:load-system "parachute")
+
+(asdf:load-system "com.djhaskin.cl-i")
 
 ;;; Package definition.
 (in-package #:cl-user)
@@ -60,7 +60,7 @@
   (merge-pathnames
     #P"tests/"
     (slot-value
-      (asdf:find-system "cl-i")
+      (asdf:find-system "com.djhaskin.cl-i")
       'asdf/component:absolute-pathname)))
 
 ;(def-suite cl-i-main
@@ -103,8 +103,6 @@
                  (<= item 0)))
              '(3 2 1)))
 
-(test *)
-
 (define-test config-supporting-functions)
 
 (define-test basic-find-file
@@ -127,84 +125,85 @@
           #P"/leaves-of-grass")
         "600dc0d36077a10ada600dd3a10fda7a")))
 
-(deftest
-  slurp-stream
-  (testing "basic slurp-stream"
-           (ok
-             (equal
-               (with-open-file
-                 (f
-                   (merge-pathnames
-                     #P".cl-i.nrdl"
-                     *tests-dir*)
-                   :direction :input
-                   :external-format :utf-8)
-                 (cl-i:slurp-stream f))
-               "{ \"hoo\" \"haa\" }"))))
+(define-test basic-slurp-stream
+  :parent config-supporting-functions
+  (is equal
+      (with-open-file
+          (f
+            (merge-pathnames
+              #P".cl-i.nrdl"
+              *tests-dir*)
+            :direction :input
+            :external-format :utf-8)
+        (cl-i:slurp-stream f))
+      "{ \"hoo\" \"haa\" }"))
 
-
-(deftest
+(define-test
   base-slurp
-  (testing "base-slurp"
-           (ok
-             (equal
-               (cl-i::base-slurp
-                 *test-config-file*)
-               "{ \"hoo\" \"haa\" }"))))
+  :parent config-supporting-functions
+  (is equal
+      (cl-i::base-slurp
+        *test-config-file*)
+      "{ \"hoo\" \"haa\" }"))
 
-(deftest
-  slurp
-  (testing
-    "paths"
-    (ok
-      (equal
+(define-test slurp
+  :parent config-supporting-functions)
+
+(define-test "slurp paths"
+  :parent slurp
+    (is equal
         (cl-i:data-slurp
           *test-config-file*)
-        "{ \"hoo\" \"haa\" }")))
-  (testing
-    "file URL"
-    (ok
-      (equal
+        "{ \"hoo\" \"haa\" }"))
+
+(define-test "slurp file URL"
+  :parent slurp
+    (is equal
         (cl-i:data-slurp
           (concatenate 'string
                        "file://"
                        (namestring *test-config-file*)))
-        "{ \"hoo\" \"haa\" }")))
-  (testing
-    "noauth"
-    (ok
-      (equal
+        "{ \"hoo\" \"haa\" }"))
+
+(define-test slurp-http-urls
+  :parent slurp)
+
+(define-test slurp-http-url-noauth
+  :parent slurp-http-urls
+    (is
+      equal
         (cl-i:data-slurp
           "https://localhost:8443/noauth/complete.txt"
           :insecure t)
-        (format nil "noauth complete"))))
+        (format nil "noauth complete")))
 
-  (testing
-    "basic"
-    (ok
-      (equal
-        (cl-i:data-slurp
-          "https://mode:code@localhost:8443/basic/complete.txt"
-          :insecure t)
-        (format nil "basic complete"))))
-  (testing
-    "header"
-    (ok
-      (equal
+(define-test slurp-http-url-basic
+  :parent slurp-http-urls
+  (is
+    equal
+    (cl-i:data-slurp
+      "https://mode:code@localhost:8443/basic/complete.txt"
+      :insecure t)
+    (format nil "basic complete")))
+
+(define-test slurp-http-url-header
+  :parent slurp-http-urls
+    (is equal
         (cl-i:data-slurp
           "https://Authorization=Bearer%20600dc0de6077a10ada600ddea10fda7a@localhost:8443/token/complete.txt"
           :insecure t)
-        (format nil "token complete"))))
-  (testing
-    "token"
-    (ok
-      (equal
+        (format nil "token complete")))
+
+(define-test slurp-http-url-token
+  :parent slurp-http-urls
+    (is equal
         (cl-i:data-slurp
           "https://600dc0de6077a10ada600ddea10fda7a@localhost:8443/token/complete.txt"
           :insecure t)
-        (format nil "token complete")))))
+        (format nil "token complete")))
 
 
+;;; TODO finish moving these over.
 (deftest
   consume-arguments
   (testing
