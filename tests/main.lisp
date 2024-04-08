@@ -107,10 +107,9 @@
 
 (define-test basic-find-file
   :parent config-supporting-functions
-  ;;; TODO: Finish him!
   (is equal
       (slot-value
-        (asdf:find-system "cl-i")
+        (asdf:find-system "com.djhaskin.cl-i")
         'asdf/component:absolute-pathname)
       (cl-i:find-file
         *tests-dir*
@@ -120,7 +119,7 @@
       (cl-i:find-file
         (merge-pathnames
           (slot-value
-            (asdf:load-system "cl-i" :force t)
+            (asdf:find-system "com.djhaskin.cl-i")
             'asdf/component:absolute-pathname)
           #P"/leaves-of-grass")
         "600dc0d36077a10ada600dd3a10fda7a")))
@@ -203,57 +202,53 @@
         (format nil "token complete")))
 
 
-;;; TODO finish moving these over.
-(deftest
-  consume-arguments
-  (testing
-    "other-args"
-    (multiple-value-bind (opts other-args)
-        (cl-i:consume-arguments
-          '("--enable-dark-mode"
-            "--reset-dark-mode"
-            "--add-dark-mode"
-            "crying"
-            "--add-dark-mode"
-            "firm"
-            "well-done"
-            "medium-well"
-            "--join-my"
-            "pride=hurt"
-            "--join-my"
-            "start=great"
-            "--nrdl-fight"
-            "15.0"
-            "--file-stride"
-            "tests/.cl-i.nrdl"))
-      (ok (equal
-            (nrdl:nested-to-alist opts)
-            '((:DARK-MODE "firm" "crying")
-             (:FIGHT . 15.0)
-             (:MY (:PRIDE . "hurt")
-                  (:START . "great"))
-             (:STRIDE ("hoo" . "haa")))
-            ))
-      (ok (equal
-            '("well-done" "medium-well")
-            other-args)
-          "Other-args handling of consume-arguments")))
-  (testing
-    "empty"
-    (ok
-      (equal (cl-i:generate-string
-               (cl-i:consume-arguments
-                 '()))
-             (format nil "{~%}"))
-      "Empty argument parsing"))
-  (testing
-    "basic"
-    (ok
-      (equal (nrdl:nested-to-alist
+(define-test consume-arguments)
+
+(define-test consume-args-other
+  :parent consume-arguments
+  (multiple-value-bind (opts other-args)
+    (cl-i:consume-arguments
+      '("--enable-dark-mode"
+        "--reset-dark-mode"
+        "--add-dark-mode"
+        "crying"
+        "--add-dark-mode"
+        "firm"
+        "well-done"
+        "medium-well"
+        "--join-my"
+        "pride=hurt"
+        "--join-my"
+        "start=great"
+        "--nrdl-fight"
+        "15.0"
+        "--file-stride"
+        "tests/.cl-i.nrdl"))
+    (is equal
+      (nrdl:nested-to-alist opts)
+      '((:DARK-MODE "firm" "crying")
+        (:FIGHT . 15.0)
+        (:MY (:PRIDE . "hurt")
+         (:START . "great"))
+        (:STRIDE ("hoo" . "haa"))))
+    (is equal
+      '("well-done" "medium-well")
+      other-args)))
+
+(define-test consume-args-empty
+  :parent consume-arguments
+  (is equal (cl-i:generate-string
+              (cl-i:consume-arguments
+                '()))
+      (format nil "{~%}")))
+
+(define-test consume-args-basic
+    (is equal (nrdl:nested-to-alist
                (cl-i:consume-arguments
                  '("--enable-foo" "--disable-bar" "baz" "--nrdl-force" "15" "--set-quux" "farquad")))
-             '((:BAR) (:FOO . T) (:FORCE . 15) (:QUUX . "farquad")))
-      "Basic argument parsing")))
+             '((:BAR) (:FOO . T) (:FORCE . 15) (:QUUX . "farquad"))))
+
+(test *)
 
 (deftest
   consume-environment
