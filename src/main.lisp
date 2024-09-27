@@ -6,10 +6,9 @@
 ;;; Some golly fluff.
 #+(or)
 (progn
-
-
   (declaim (optimize (speed 0) (space 0) (debug 3)))
   (asdf:load-system "com.djhaskin.cl-i"))
+
 ;;; Package definition.
 (in-package #:cl-user)
 (defpackage
