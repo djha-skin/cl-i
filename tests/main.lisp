@@ -248,28 +248,24 @@
                  '("--enable-foo" "--disable-bar" "baz" "--nrdl-force" "15" "--set-quux" "farquad")))
              '((:BAR) (:FOO . T) (:FORCE . 15) (:QUUX . "farquad"))))
 
-(test *)
-
-(deftest
+(define-test
   consume-environment
-  (testing
-    "Basic"
-    (ok
-      (equal
-        '((:FINES ("key" . 155.5))
-          (:FORESIGHT . T)
-          (:FORKS . "whenceandwhither")
-          (:MAPLE "1" "2" "3" "4" "5"))
-        (nrdl:nested-to-alist
-          (cl-i:consume-environment
-            "hello"
-            (alexandria:alist-hash-table
-              '(("HELLO_LIST_MAPLE" . "1,2,3,4,5")
-                ("HELLO_FANGLE_DOG" . "12345")
-                ("VARS" . "xtreem")
-                ("HELLO_NRDL_FINES" . "{ \"key\": 155.5 }")
-                ("HELLO_FLAG_FORESIGHT" . "0")
-                ("HELLO_ITEM_FORKS" . "whenceandwhither")))))))))
+  (is
+    equal
+    '((:FINES ("key" . 155.5))
+      (:FORESIGHT . T)
+      (:FORKS . "whenceandwhither")
+      (:MAPLE "1" "2" "3" "4" "5"))
+    (nrdl:nested-to-alist
+      (cl-i:consume-environment
+        "hello"
+        (alexandria:alist-hash-table
+          '(("HELLO_LIST_MAPLE" . "1,2,3,4,5")
+            ("HELLO_FANGLE_DOG" . "12345")
+            ("VARS" . "xtreem")
+            ("HELLO_NRDL_FINES" . "{ \"key\": 155.5 }")
+            ("HELLO_FLAG_FORESIGHT" . "0")
+            ("HELLO_ITEM_FORKS" . "whenceandwhither")))))))
 
 (defun blank-command
   (options)
@@ -288,49 +284,46 @@
   (setf (gethash :status options) :input-output-error)
   options)
 
-(deftest config-file-options
-         (testing
-           "typical invocation"
-           (ok
-             (equal
-               (nrdl:nested-to-alist
-                 (cl-i:config-file-options
-                   "hi"
-                   (alexandria:alist-hash-table
-                     #+windows
-                     '(
-                       ("USERPROFILE" . "C:\\Users\\djh")
-                       )
-                     #-windows
-                     '(
-                       ("HOME" . "/home/skin")
-                       )
-                     :test #'equal
-                     )
-                   (make-hash-table)))
-               '((:CHIVES
-                  (:LOVE . 15)
-                  (:SORE_LOSERS
-                   (:COOL . :BEANS)
-                   (:STATE . "virginia"))
-                  (:SPICES . T))
-                 (:DOT . nil)
-                 (:GARY . 3)
-                 (:HAIRY . 4)
-                 (:SLASH . cl:null))))))
+(define-test
+    config-file-options
+  "typical invocation"
+  (is
+    equal
+    (nrdl:nested-to-alist
+      (cl-i:config-file-options
+        "hi"
+        (alexandria:alist-hash-table
+          #+windows
+          '(
+            ("USERPROFILE" . "C:\\Users\\djh")
+            )
+          #-windows
+          '(
+            ("HOME" . "/home/skin")
+            )
+          :test #'equal
+          )
+        (make-hash-table)))
+    '((:CHIVES
+       (:LOVE . 15)
+       (:SORE_LOSERS
+        (:COOL . :BEANS)
+        (:STATE . "virginia"))
+       (:SPICES . T))
+      (:DOT . nil)
+      (:GARY . 3)
+      (:HAIRY . 4)
+      (:SLASH . cl:null))))
 
-(deftest
-  execute-program
-  (testing
-    "empty cases"
-    (ok
-      (signals
-        (cl-i:execute-program
-          "Halo"
-          (make-hash-table)
-          nil)
-        'cl-i:necessary-env-var-absent)
-      "Necessary environment variables absent")
+(define-test execute-program)
+
+(define-test "execute-program empty cases"
+  :parent execute-program
+  (signals
+    (cl-i:execute-program
+      "Halo"
+      (make-hash-table)
+      nil))
     (multiple-value-bind (code outcome)
         (cl-i:execute-program
           "Halo"
@@ -354,8 +347,9 @@
         (equal
           code
           64))))
-  (testing
-    "typical invocation"
+
+(define-test "execute-program typical invocation"
+  :parent execute-program
     (multiple-value-bind (code outcome)
       (cl-i:execute-program
         "hi"
@@ -395,7 +389,7 @@
       (list
         code
         (nrdl:nested-to-alist outcome))
-    (ok (equal (nrdl:nested-to-alist outcome)
+    (is equal (nrdl:nested-to-alist outcome)
 
                '((:ALL-THE-THINGS) (:BARF "3" "2" "1")
                                    (:CHIVES (:LOVE . 15) (:SORE_LOSERS (:COOL . :BEANS) (:STATE . "virginia"))
@@ -407,9 +401,7 @@
                                    (:SLASH . cl:null)
                                    (:STATUS . :INPUT-OUTPUT-ERROR)
                                    ))
-        "Typical invocation hash table check")
-    (ok (equal code 74)
-        "Typical invocation exit code check"))))
+    (is equal code 74)))
 
 ;;#(defmacro write-or-check-nrdl (thing strm file expected actual)
 ;;#

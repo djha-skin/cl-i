@@ -11,6 +11,8 @@
                "dexador"
                "trivial-features"
                "trivial-package-local-nicknames"
+               #+win32
+               "winhttp"
                )
   :components ((:module "src"
                 :components
