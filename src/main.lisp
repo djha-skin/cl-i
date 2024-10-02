@@ -44,6 +44,7 @@
       make-os-specific-path
       necessary-env-var-absent
       os-specific-home
+      os-specific-cache-dir
       os-specific-config-dir
       find-file
       exit-error
@@ -363,6 +364,40 @@
                 (funcall getenv "HOME")
                 "/")))
 
+#+(or)
+(os-specific-cache-dir "halo" (lambda (x &optional y)
+                                 (or (uiop/os:getenv x) y)))
+
+(defun os-specific-cache-dir (program-name getenv)
+  (make-os-specific-path
+    #+windows (concatenate
+                'string
+                (funcall getenv "LOCALAPPDATA"
+                         (concatenate
+                           'string
+                           (funcall
+                             getenv
+                             "USERPROFILE")
+                           "\\AppData\\Local"))
+                "\\"
+                program-name
+                "\\Cache\\")
+    #+darwin (concatenate
+               'string
+               (funcall getenv "HOME")
+               "/Library/Caches/"
+               program-name
+               "/")
+    #-(or darwin windows)
+    (concatenate
+      'string
+      (funcall getenv "XDG_CONFIG_HOME"
+               (concatenate 'string
+                            (funcall getenv "HOME")
+                            "/.cache"))
+      "/"
+      program-name
+      "/")))
 #+(or)
 (os-specific-config-dir "halo" (lambda (x &optional y)
                                  (or (uiop/os:getenv x) y)))

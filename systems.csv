@@ -68,3 +68,5 @@ winhttp, ghcr.io/ocicl/winhttp@sha256:e58cd0caea723b040eb8ca2b1a1a03adc971b74d8a
 bordeaux-threads, ghcr.io/ocicl/bordeaux-threads@sha256:9df017ccbb783949cdaea6c7849d678105e041b784d0fc738220873739c3bfe5, bordeaux-threads-0.9.1/bordeaux-threads.asd
 global-vars, ghcr.io/ocicl/global-vars@sha256:22937c8bd0f635855c2c044b0ae0ab3b438ba5e858192dae462807148547d99a, global-vars-20230809-c749f32/global-vars.asd
 global-vars-test, ghcr.io/ocicl/global-vars@sha256:22937c8bd0f635855c2c044b0ae0ab3b438ba5e858192dae462807148547d99a, global-vars-20230809-c749f32/global-vars-test.asd
+cl+ssl.test, ghcr.io/ocicl/cl_plus_ssl@sha256:acb61e8e4d3efcb23f4d86405ad22fdca2d685268c664735c962646a09706ab6, cl-plus-ssl-20240505-17d5cdd/cl+ssl.test.asd
+cl+ssl, ghcr.io/ocicl/cl_plus_ssl@sha256:acb61e8e4d3efcb23f4d86405ad22fdca2d685268c664735c962646a09706ab6, cl-plus-ssl-20240505-17d5cdd/cl+ssl.asd
