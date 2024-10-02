@@ -1,5 +1,5 @@
 (defsystem "com.djhaskin.cl-i"
-  :version "0.7.0"
+  :version "0.8.0"
   :author "Daniel Jay Haskin"
   :license "MIT"
   :depends-on (
@@ -25,7 +25,7 @@
                 (test-op (test-op "com.djhaskin.cl-i/tests"))))
 
 (defsystem "com.djhaskin.cl-i/tests"
-  :version "0.7.0"
+  :version "0.8.0"
   :author "Daniel Jay Haskin"
   :license "MIT"
   :depends-on (
